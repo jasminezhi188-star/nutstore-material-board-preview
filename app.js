@@ -3,6 +3,14 @@
 const root=document.getElementById('mp-design'),screen=document.getElementById('screen');
 const key='nutstore-github-preview-v1';const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const roots=['材料模板','匹配简报','基础介绍（集团、合作办学、服务清单）','申报材料（2027）','外方院校简介','中方院校招生计划'];
+// 示例合作关系。同一院校的稳定编号不因文件名、文件夹或项目数量而变化。
+const cooperationPartners=[
+ {chineseId:'cn-a',foreignId:'uk-a'},
+ {chineseId:'cn-b',foreignId:'au-a'},
+ {chineseId:'cn-c',foreignId:'uk-a'},
+ {chineseId:'cn-a',foreignId:'uk-a'}
+];
+function schoolTotals(){const chinese=new Set(cooperationPartners.map(p=>p.chineseId).filter(Boolean)).size,foreign=new Set(cooperationPartners.map(p=>p.foreignId).filter(Boolean)).size;return '<div class="school-totals" aria-label="合作院校统计"><dl><dt>中方院校总数</dt><dd>'+chinese+'<small>所</small></dd></dl><dl><dt>外方院校总数</dt><dd>'+foreign+'<small>所</small></dd></dl></div>'}
 const files=[],emptyDirs=[];let seq=0;
 function file(rootId,relative){const path='/'+roots[rootId]+'/'+relative;files.push({id:++seq,rootId,path,name:relative.split('/').pop(),modified:'2026-10-29 09:30'})}
 Object.keys(MATERIAL_TEMPLATES).forEach(t=>file(0,t+'材料清单模板.xlsx'));
@@ -32,7 +40,7 @@ function directories(){const set=new Set(emptyDirs);for(const f of files){let p=
 function current(){return cases.find(c=>c.id===caseId)}
 function button(text,attrs=''){return '<button type="button" '+attrs+'>'+text+'</button>'}
 function cardHTML(name,count,attrs){return '<button class="folder" '+attrs+'><span class="folder-icon" aria-hidden="true"></span><strong>'+esc(name)+'</strong><span class="file-count">'+count+' <small>个文件</small></span><span class="muted">查看文件 →</span></button>'}
-function overview(){const all=files.filter(f=>(!folder||within(f.path,folder))&&(!query||(f.name+' '+f.path).toLowerCase().includes(query.toLowerCase())));const title=folder?folder.split('/').pop():'坚果云文件总览';let html='<div class="heading"><div><h1>'+esc(title)+'</h1><p class="muted">查看文件总数、原有目录和学校资料。</p></div></div><div class="toolbar"><input id="search" aria-label="搜索学校或文件名称" placeholder="搜索学校或文件名称" value="'+esc(query)+'">'+(folder?button('全部根文件夹','data-action="home"'):'')+'</div>';
+function overview(){const all=files.filter(f=>(!folder||within(f.path,folder))&&(!query||(f.name+' '+f.path).toLowerCase().includes(query.toLowerCase())));const title=folder?folder.split('/').pop():'坚果云文件总览';let html='<div class="heading overview-heading"><div><h1>'+esc(title)+'</h1><p class="muted">查看文件总数、原有目录和学校资料。</p></div>'+(!folder?schoolTotals():'')+'</div>'+(!folder?'<p class="school-count-note">合作院校去重计数，同一院校参与多个项目只计一次。</p>':'')+'<div class="toolbar"><input id="search" aria-label="搜索学校或文件名称" placeholder="搜索学校或文件名称" value="'+esc(query)+'">'+(folder?button('全部根文件夹','data-action="home"'):'')+'</div>';
  if(!folder&&!query){html+='<div class="section-title"><strong>根文件夹</strong><span class="muted">'+roots.length+' 个文件夹 · '+files.length+' 个文件</span></div><div class="folders">'+roots.map((n,i)=>cardHTML(n,files.filter(f=>f.rootId===i).length,'data-folder="'+esc('/'+n)+'"')).join('')+'</div>'}
  else{html+='<div class="toolbar">'+(folder?button('← 上一级','data-action="up"'):'')+'<span class="path">'+esc(folder||'全部根文件夹')+'</span></div><p class="muted">'+(query?'找到 '+all.length+' 个文件':'当前文件夹及下级目录共 '+all.length+' 个文件')+'</p>';
  const child=directories().filter(d=>within(d,folder)&&d!==folder&&!d.slice(folder.length+1).includes('/')).sort((a,b)=>a.localeCompare(b,'zh-CN'));const entries=query?all:all.filter(f=>f.path.slice(folder.length+1).indexOf('/')<0);
